@@ -30,6 +30,7 @@ class MainActivity : AppCompatActivity() {
         brushDialog.setContentView(dBinding.root)
 
         brushDialog.setTitle("Brush size")
+
         dBinding.smallBrushIb.setOnClickListener {
             binding.drawingView.setSizeForBrush(10f)
             brushDialog.dismiss()
