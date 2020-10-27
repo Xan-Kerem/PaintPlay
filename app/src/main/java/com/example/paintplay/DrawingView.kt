@@ -46,7 +46,7 @@ class DrawingView(context: Context, atts: AttributeSet) : View(context, atts) {
         super.onDraw(canvas)
         canvas?.drawBitmap(canvasBitmap!!, 0f, 0f, canvasPaint)
 
-        for ( path in paths){
+        for (path in paths) {
 
             drawPaint!!.strokeWidth = path.brushThickness
             drawPaint!!.color = path.color
@@ -93,9 +93,18 @@ class DrawingView(context: Context, atts: AttributeSet) : View(context, atts) {
         return true
     }
 
-    fun setSizeForBrush(newSize : Float){
-        brushSize = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP,newSize,resources.displayMetrics)
+    fun setSizeForBrush(newSize: Float) {
+        brushSize = TypedValue.applyDimension(
+            TypedValue.COMPLEX_UNIT_DIP,
+            newSize,
+            resources.displayMetrics
+        )
         drawPaint!!.strokeWidth = brushSize
+    }
+
+    fun setColor(newColor: String) {
+        color = Color.parseColor(newColor)
+        drawPaint?.color = color
     }
 
     internal inner class CustomPath(var color: Int, var brushThickness: Float) : Path()
