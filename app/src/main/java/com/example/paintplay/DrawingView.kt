@@ -19,6 +19,7 @@ class DrawingView(context: Context, atts: AttributeSet) : View(context, atts) {
 
     // for storing lines
     private val paths = ArrayList<CustomPath>()
+    private val undoPaths = ArrayList<CustomPath>()
 
 
     init {
@@ -105,6 +106,13 @@ class DrawingView(context: Context, atts: AttributeSet) : View(context, atts) {
     fun setColor(newColor: String) {
         color = Color.parseColor(newColor)
         drawPaint?.color = color
+    }
+
+    fun onClickUndo() {
+        if (paths.size > 0) {
+            undoPaths.add(paths.removeAt(paths.size - 1))
+            invalidate()
+        }
     }
 
     internal inner class CustomPath(var color: Int, var brushThickness: Float) : Path()
