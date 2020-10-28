@@ -35,6 +35,8 @@ class MainActivity : AppCompatActivity() {
 
     private val coroutineScope = CoroutineScope(Dispatchers.IO)
 
+    private lateinit var progressDialog: Dialog
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
@@ -73,17 +75,28 @@ class MainActivity : AppCompatActivity() {
         }
 
         binding.saveIb.setOnClickListener {
+
             if (isReadStorageAllowed()) {
+
+                showProgressDialog()
 
                 coroutineScope.launch {
 
                     val result = saveImageAsFile(getBitmapFromView(binding.flDrawingViewContainer))
-                    if (result.isNotEmpty())
+
+                    if (result.isNotEmpty()) {
+
                         withContext(Dispatchers.Main) {
+
+                            cancelProgressDialog()
+
                             Toast.makeText(this@MainActivity, result, Toast.LENGTH_SHORT).show()
                         }
-                    else {
+                    } else {
                         withContext(Dispatchers.Main) {
+
+                            cancelProgressDialog()
+
                             Toast.makeText(
                                 this@MainActivity,
                                 "Something went wrong on saving image",
@@ -91,6 +104,7 @@ class MainActivity : AppCompatActivity() {
                             ).show()
                         }
                     }
+
                 }
             } else {
                 requestStoragePermission()
@@ -193,7 +207,9 @@ class MainActivity : AppCompatActivity() {
         grantResults: IntArray
     ) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+
         if (requestCode == STORAGE_PERMISSION_CODE) {
+
             if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
 
                 Toast.makeText(this, "permission granted!", Toast.LENGTH_SHORT).show()
@@ -253,6 +269,16 @@ class MainActivity : AppCompatActivity() {
             return ""
         }
 
+    }
+
+    private fun showProgressDialog() {
+        progressDialog = Dialog(this)
+        progressDialog.setContentView(R.layout.dialog_custom_progress)
+        progressDialog.show()
+    }
+
+    private fun cancelProgressDialog() {
+        progressDialog.dismiss()
     }
 
     companion object {
