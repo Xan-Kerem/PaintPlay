@@ -5,6 +5,9 @@ import android.app.Activity
 import android.app.Dialog
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.graphics.Bitmap
+import android.graphics.Canvas
+import android.graphics.Color
 import android.os.Bundle
 import android.provider.MediaStore
 import android.view.View
@@ -16,12 +19,21 @@ import androidx.core.content.ContextCompat
 import androidx.core.view.get
 import com.example.paintplay.databinding.ActivityMainBinding
 import com.example.paintplay.databinding.DialogBrushSizeBinding
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import java.io.ByteArrayOutputStream
+import java.io.File
+import java.io.FileOutputStream
 
 class MainActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMainBinding
 
     private lateinit var currentPaintImageButton: ImageButton
+
+    private val coroutineScope = CoroutineScope(Dispatchers.IO)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -60,6 +72,30 @@ class MainActivity : AppCompatActivity() {
             binding.drawingView.onClickUndo()
         }
 
+        binding.saveIb.setOnClickListener {
+            if (isReadStorageAllowed()) {
+
+                coroutineScope.launch {
+
+                    val result = saveImageAsFile(getBitmapFromView(binding.flDrawingViewContainer))
+                    if (result.isNotEmpty())
+                        withContext(Dispatchers.Main) {
+                            Toast.makeText(this@MainActivity, result, Toast.LENGTH_SHORT).show()
+                        }
+                    else {
+                        withContext(Dispatchers.Main) {
+                            Toast.makeText(
+                                this@MainActivity,
+                                "Something went wrong on saving image",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        }
+                    }
+                }
+            } else {
+                requestStoragePermission()
+            }
+        }
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
@@ -173,6 +209,50 @@ class MainActivity : AppCompatActivity() {
             ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE)
 
         return result == PackageManager.PERMISSION_GRANTED
+    }
+
+    private fun getBitmapFromView(view: View): Bitmap {
+
+        val bitmap = Bitmap.createBitmap(view.width, view.height, Bitmap.Config.ARGB_8888)
+
+        val canvas = Canvas(bitmap)
+
+        val bgDrawable = view.background
+
+        if (bgDrawable != null) {
+            bgDrawable.draw(canvas)
+        } else {
+            canvas.drawColor(Color.WHITE)
+        }
+
+        view.draw(canvas)
+
+        return bitmap
+    }
+
+    private fun saveImageAsFile(bitmap: Bitmap): String {
+
+        try {
+            val bytes = ByteArrayOutputStream()
+            bitmap.compress(Bitmap.CompressFormat.PNG, 90, bytes)
+
+            val file =
+                File(
+                    externalCacheDir?.absoluteFile.toString() +
+                            File.separator + "PlayPaint_" + System.currentTimeMillis() / 1000 + ".png"
+                )
+
+            val fileOutputStream = FileOutputStream(file)
+            fileOutputStream.write(bytes.toByteArray())
+            fileOutputStream.close()
+
+            return file.absolutePath
+
+        } catch (e: Exception) {
+            e.printStackTrace()
+            return ""
+        }
+
     }
 
     companion object {
